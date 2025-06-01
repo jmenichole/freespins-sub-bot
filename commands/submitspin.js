@@ -23,6 +23,8 @@ module.exports = {
     const link = interaction.options.getString('link');
     const description = interaction.options.getString('description') || '';
 
+    const freespinsRoleId = '1378603138172321862'; // Replace with actual role ID
+
     if (/ref|aff|code|partner/i.test(link) && casino !== 'seal') {
       return interaction.reply({ content: '❌ Referral links are not allowed unless from Seal.', ephemeral: true });
     }
@@ -30,9 +32,12 @@ module.exports = {
     if (vettedCasinos[casino]?.allowed) {
       const announceChannel = interaction.guild.channels.cache.find(c => c.name === process.env.ANNOUNCE_CHANNEL);
       if (announceChannel) {
-        announceChannel.send(`🎰 **${casino.toUpperCase()} Free Spins!**
+        announceChannel.send({
+          content: `🎰 <@&${freespinsRoleId}> **${casino.toUpperCase()} Free Spins!**
 ${description}
-🔗 ${link}`);
+🔗 ${link}`,
+          allowedMentions: { roles: [freespinsRoleId] }
+        });
         await interaction.reply({ content: '✅ Submitted to announcements!', ephemeral: true });
       } else {
         await interaction.reply({ content: '⚠️ Announcement channel not found.', ephemeral: true });
