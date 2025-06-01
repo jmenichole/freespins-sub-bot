@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const vettedCasinos = require('../vettedCasinos.json');
 
 module.exports = {
@@ -23,14 +23,15 @@ module.exports = {
     const link = interaction.options.getString('link');
     const description = interaction.options.getString('description') || '';
 
-    const freespinsRoleId = '1378603138172321862'; // Replace with actual role ID
+    const freespinsRoleId = '1378603138172321862'; // Replace with your actual role ID
+    const announceChannel = interaction.guild.channels.cache.get(process.env.ANNOUNCE_CHANNEL);
+    const modChannel = interaction.guild.channels.cache.get(process.env.MOD_CHANNEL);
 
     if (/ref|aff|code|partner/i.test(link) && casino !== 'seal') {
       return interaction.reply({ content: '❌ Referral links are not allowed unless from Seal.', ephemeral: true });
     }
 
     if (vettedCasinos[casino]?.allowed) {
-      const announceChannel = interaction.guild.channels.cache.find(c => c.name === process.env.ANNOUNCE_CHANNEL);
       if (announceChannel) {
         announceChannel.send({
           content: `🎰 <@&${freespinsRoleId}> **${casino.toUpperCase()} Free Spins!**
@@ -43,12 +44,26 @@ ${description}
         await interaction.reply({ content: '⚠️ Announcement channel not found.', ephemeral: true });
       }
     } else {
-      const modChannel = interaction.guild.channels.cache.find(c => c.name === process.env.MOD_CHANNEL);
       if (modChannel) {
-        modChannel.send(`🚨 New unvetted free spins submission by <@${interaction.user.id}>:
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`approve_${casino}_${interaction.user.id}`)
+            .setLabel('✅ Approve')
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`reject_${casino}_${interaction.user.id}`)
+            .setLabel('❌ Reject')
+            .setStyle(ButtonStyle.Danger)
+        );
+
+        modChannel.send({
+          content: `🚨 New unvetted free spins submission by <@${interaction.user.id}>:
 Casino: **${casino}**
 ${description}
-🔗 ${link}`);
+🔗 ${link}`,
+          components: [row]
+        });
+
         await interaction.reply({ content: '🕵️ Sent for moderator approval.', ephemeral: true });
       } else {
         await interaction.reply({ content: '⚠️ Mod channel not found.', ephemeral: true });
