@@ -1,0 +1,4 @@
+{
+  "stake.us": { "allowed": true, "notes": "Non-referral links only" },
+  "bc.game": { "allowed": false }
+}
